@@ -1,0 +1,43 @@
+
+<launch>
+
+  <!-- Name of the map to use and initial position -->
+  <arg name="map_file"       default="$(find second_project)/maps/map.yaml"/>
+  <arg name="initial_pose_x" default="0.0"/> 	
+  <arg name="initial_pose_y" default="0.0"/>
+  <arg name="initial_pose_a" default="0.0"/>
+
+  <arg name="odom_frame_id"   default="odom"/>
+  <arg name="global_frame_id" default="map"/>
+
+  <param name="/use_sim_time" value="true"/>
+  
+  <node pkg="tf" type="static_transform_publisher" name="laser_transform" args="0 0 0 0 0 0.7071068 0.7071068 base_link laser 100" />
+
+  <!--  ****** map *****  -->
+  <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)">
+    <param name="frame_id" value="map"/>
+  </node>
+
+	<!--  ****** imu tools *****  -->
+ 
+  <include file="$(find second_project)/launch/imu_tools.launch">
+  </include>
+  
+  <!--  ****** amcl *****  -->
+  <include file="$(find second_project)/launch/amcl.launch.xml">
+    <arg name="scan_topic" value="scan"/>
+    <arg name="use_map_topic" value="true"/>
+    <arg name="initial_pose_x" value="$(arg initial_pose_x)"/>
+    <arg name="initial_pose_y" value="$(arg initial_pose_y)"/>
+    <arg name="initial_pose_a" value="$(arg initial_pose_a)"/>
+  </include>
+  
+  <!--  ****** robot localization *****  -->
+  <include file="$(find second_project)/launch/ekf_localization.launch">
+  </include>
+
+
+  <!--  **************** visualisation ****************  -->
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find second_project)/rviz/robot_navigation.rviz"/>
+</launch>
